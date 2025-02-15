@@ -110,7 +110,7 @@
                 },4000)
                 return;
             }
-            if(!emailRegex.test(email)){
+            if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
                 warning.textContent = "Please Enter a valid Email!";
                 warning.style.display = "block";
                 setTimeout(function(){
@@ -118,7 +118,7 @@
                 },4000)
                 return;
             }
-            if(/[0-9]/.test(userName) && /^[a-zA-Z0-9]/.test(userName)){
+            if(!/^[a-zA-Z0-9]+$/.test(userName)){
                 warning.textContent = "Please username must not contain neither a digit nor a special character. Try again later";
                 warning.style.display ="block";
                 setTimeout(function(){
@@ -126,8 +126,16 @@
                 },4000)
                 return;
             }
-            if(!/[a-z]/.test(password) && !/[A-Z]/.test(password) && !/^[a-zA-Z0-9]/.test(password) && !/[0-9]/.test(password) && !password.length>=8){
+            if(!/[a-z]/.test(password) && !/[A-Z]/.test(password) && !/^[a-zA-Z0-9]/.test(password) && !/[0-9]/.test(password)){
                 warning.textContent = "Please password must be eight characters length, at least one uppercase leter, lowercase later, digit and special character.";
+                warning.style.display = "block";
+                setTimeout(function(){
+                    warning.style.display = "none";
+                },4000)
+                return;
+            }
+            if(password.length < 8){
+                warning.textContent ="input at least eight characters long";
                 warning.style.display = "block";
                 setTimeout(function(){
                     warning.style.display = "none";
@@ -142,7 +150,7 @@
                 },4000)
                 return;
             }
-            fetch("http://localhost:8000/api/user/register",{
+            fetch("http://localhost:4000/api/user/register",{
                 method: "POST",
                 headers:{
                     "Content-Type": "application/json",
@@ -155,14 +163,13 @@
                 }),
             })
             .then(function(response){
-                if(!response.ok){
-                    warning.textContent = "response is not okey. Please re-fil the form and try again later.";
-                    warning.style.display ="block";
-                    form.reset();
-                    setTimeout(function(){
-                        warning.style.display = "none";
-                    },4000)
-                    return;
+                if (!response.ok) {
+                    // Handle specific error cases
+                    if (response.status === 409) {
+                        throw new Error("Email already exists in the database. Please log in instead.");
+                    } else {
+                        throw new Error("Network response was not ok.");
+                    }
                 }
                 return response.json();
             })
@@ -170,6 +177,7 @@
                 warning.textContent = "Registration was done successfully! you can now login!!";
                 warning.style.display ="block";
                 warning.style.color = "green";
+                form.reset();
                 setTimeout(function(){
                     warning.style.display = "none";
                 },4000)
@@ -178,6 +186,7 @@
                 console.error("Error signing up:", error);
                 warning.textContent = "Failed to register. Please try again later!";
                 warning.style.display = "block";
+                form.reset();
                 setTimeout(function(){
                     warning.style.display = "none";
                 },4000)
